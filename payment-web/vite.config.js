@@ -13,9 +13,16 @@ export default defineConfig({
     cssMinify: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'stripe': ['@stripe/stripe-js', '@stripe/react-stripe-js'],
-          'router': ['react-router-dom'],
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('@stripe')) {
+              return 'stripe';
+            }
+            if (id.includes('react-router-dom')) {
+              return 'router';
+            }
+            return 'vendor';
+          }
         },
       },
     },
