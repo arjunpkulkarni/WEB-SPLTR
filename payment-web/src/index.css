@@ -1,0 +1,100 @@
+:root {
+  /* Primary colors - matching your React Native app */
+  --color-primary: #4A90E2;
+  --color-secondary: #50C878;
+  --color-tertiary: #9B59B6;
+  
+  /* Neutral colors */
+  --color-background: #F8F9FA;
+  --color-surface: #FFFFFF;
+  --color-surface-variant: #F1F3F5;
+  
+  /* Text colors */
+  --color-on-surface: #2B3437;
+  --color-on-surface-variant: #5F6C72;
+  --color-outline: #C1C7CD;
+  --color-outline-variant: #E0E4E8;
+  
+  /* Semantic colors */
+  --color-success: #50C878;
+  --color-error: #E74C3C;
+  --color-warning: #F39C12;
+  
+  /* Spacing scale */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  
+  /* Border radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(43, 52, 55, 0.05);
+  --shadow-md: 0 4px 6px rgba(43, 52, 55, 0.07);
+  --shadow-lg: 0 10px 15px rgba(43, 52, 55, 0.1);
+  --shadow-xl: 0 20px 25px rgba(43, 52, 55, 0.15);
+  
+  /* Typography */
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Manrope', var(--font-primary);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-primary);
+  background-color: var(--color-background);
+  color: var(--color-on-surface);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Ensure good touch targets on mobile */
+button, a, input {
+  min-height: 44px;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
