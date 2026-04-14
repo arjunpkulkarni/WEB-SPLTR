@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import HomePage from './pages/HomePage';
 import PaymentPage from './pages/PaymentPage';
 import PartyJoinPage from './pages/PartyJoinPage';
 import PartyReceiptPage from './pages/PartyReceiptPage';
@@ -11,6 +12,9 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Home: enter invite code */}
+        <Route path="/" element={<HomePage />} />
+
         {/* Flow 2: Party / Guest invite */}
         <Route path="/party/:token" element={<PartyJoinPage />} />
         <Route path="/party/:token/receipt" element={<PartyReceiptPage />} />
@@ -22,8 +26,7 @@ function App() {
         {/* Shared */}
         <Route path="/success" element={<SuccessPage />} />
         <Route path="/error" element={<ErrorPage />} />
-        <Route path="/" element={<Navigate to="/error" replace />} />
-        <Route path="*" element={<Navigate to="/error" replace />} />
+        <Route path="*" element={<HomePage />} />
       </Routes>
     </Router>
   );
