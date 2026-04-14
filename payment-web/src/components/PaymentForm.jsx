@@ -12,10 +12,11 @@ export default function PaymentForm({ amount, billTitle, clientSecret, onSuccess
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
   const [paymentRequest, setPaymentRequest] = useState(null);
 
   useEffect(() => {
-    if (!stripe) return;
+    if (!stripe || !amount) return;
     const amountCents = Math.round(parseFloat(amount) * 100);
     if (amountCents <= 0) return;
 
@@ -40,11 +41,13 @@ export default function PaymentForm({ amount, billTitle, clientSecret, onSuccess
 
       if (confirmError) {
         ev.complete('fail');
+        setErrorMsg(confirmError.message);
         onError?.(confirmError.message);
       } else if (paymentIntent.status === 'requires_action') {
         const { error: actionError } = await stripe.confirmCardPayment(clientSecret);
         if (actionError) {
           ev.complete('fail');
+          setErrorMsg(actionError.message);
           onError?.(actionError.message);
         } else {
           ev.complete('success');
@@ -60,19 +63,24 @@ export default function PaymentForm({ amount, billTitle, clientSecret, onSuccess
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!stripe || !elements) return;
-    setProcessing(true);
 
-    const { error } = await stripe.confirmPayment({
+    setProcessing(true);
+    setErrorMsg(null);
+
+    const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: { return_url: window.location.origin + '/success' },
       redirect: 'if_required',
     });
 
     if (error) {
+      setErrorMsg(error.message);
       onError?.(error.message);
       setProcessing(false);
-    } else {
+    } else if (paymentIntent?.status === 'succeeded') {
       onSuccess?.();
+    } else {
+      setProcessing(false);
     }
   };
 
@@ -90,6 +98,10 @@ export default function PaymentForm({ amount, billTitle, clientSecret, onSuccess
       )}
 
       <PaymentElement />
+
+      {errorMsg && (
+        <div className="payment-error" role="alert">{errorMsg}</div>
+      )}
 
       <button
         type="submit"
