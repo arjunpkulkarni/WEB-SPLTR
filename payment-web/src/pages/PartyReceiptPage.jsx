@@ -15,6 +15,7 @@ export default function PartyReceiptPage() {
 
   const [receipt, setReceipt] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [claiming, setClaiming] = useState(null);
   const [error, setError] = useState(null);
   const wsRef = useRef(null);
@@ -23,12 +24,19 @@ export default function PartyReceiptPage() {
     try {
       const data = await getReceipt(token);
       setReceipt(data);
+      setError(null);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, [token]);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchReceipt();
+  };
 
   useEffect(() => { fetchReceipt(); }, [fetchReceipt]);
 
@@ -46,7 +54,7 @@ export default function PartyReceiptPage() {
           }
         } catch { /* ignore malformed messages */ }
       };
-      ws.onerror = () => { /* WebSocket not available — silent fallback */ };
+      ws.onerror = () => {};
       ws.onclose = () => { wsRef.current = null; };
     } catch { /* WebSocket not supported */ }
     return () => { ws?.close(); };
@@ -66,7 +74,7 @@ export default function PartyReceiptPage() {
 
   const handleContinue = () => {
     navigate(`${basePath}/${token}/pay`, {
-      state: { memberName, billTitle },
+      state: { memberName, billTitle: title },
     });
   };
 
@@ -89,7 +97,7 @@ export default function PartyReceiptPage() {
   }
 
   const items = receipt?.items || [];
-  const title = billTitle || receipt?.bill_title || 'Your Bill';
+  const title = billTitle || receipt?.bill_title || receipt?.bill_name || receipt?.title || receipt?.name || 'Your Bill';
   const myClaimedItems = items.filter(item =>
     item.claimed_by?.some(c => c.name === memberName || c.nickname === memberName)
   );
@@ -108,16 +116,32 @@ export default function PartyReceiptPage() {
           </p>
         </div>
 
+        <button
+          className="refresh-btn"
+          onClick={handleRefresh}
+          disabled={refreshing}
+        >
+          <span className={`refresh-icon ${refreshing ? 'spinning' : ''}`}>↻</span>
+          {refreshing ? 'Refreshing...' : 'Refresh'}
+        </button>
+
         {error && (
           <div className="receipt-inline-error" role="alert">{error}</div>
         )}
 
         <div className="items-card">
           {items.map((item) => {
-            const isMine = item.claimed_by?.some(
+            const myClaim = item.claimed_by?.find(
               c => c.name === memberName || c.nickname === memberName
             );
+            const isMine = !!myClaim;
             const claimCount = item.claimed_by?.length || 0;
+            const fullPrice = parseFloat(item.total_price || item.unit_price || 0);
+
+            // Show what I owe (split amount) vs the full item price
+            const myAmount = myClaim ? parseFloat(myClaim.amount_owed || 0) : null;
+            const isSplit = claimCount > 1;
+
             const othersText = item.claimed_by
               ?.filter(c => c.name !== memberName && c.nickname !== memberName)
               .map(c => c.name || c.nickname)
@@ -141,14 +165,21 @@ export default function PartyReceiptPage() {
                     {claimCount > 0 && (
                       <span className="claim-item-people">
                         {isMine && othersText ? `You, ${othersText}` : isMine ? 'You' : othersText}
-                        {claimCount > 1 ? ` · split ${claimCount} ways` : ''}
+                        {isSplit ? ` · split ${claimCount} ways` : ''}
                       </span>
                     )}
                   </div>
                 </div>
-                <span className="claim-item-price">
-                  {formatCurrency(parseFloat(item.total_price || item.unit_price || 0))}
-                </span>
+                <div className="claim-item-prices">
+                  {isMine && isSplit ? (
+                    <>
+                      <span className="claim-item-my-price">{formatCurrency(myAmount)}</span>
+                      <span className="claim-item-full-price">{formatCurrency(fullPrice)}</span>
+                    </>
+                  ) : (
+                    <span className="claim-item-price">{formatCurrency(fullPrice)}</span>
+                  )}
+                </div>
               </button>
             );
           })}

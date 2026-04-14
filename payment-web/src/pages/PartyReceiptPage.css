@@ -46,6 +46,49 @@
   color: var(--color-on-surface);
 }
 
+/* ── Refresh button ── */
+
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: var(--spacing-md);
+  background: var(--color-surface-lowest);
+  border: 1px solid var(--color-surface-high);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-on-surface-variant);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.refresh-btn:hover {
+  background: var(--color-surface-low);
+}
+
+.refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.refresh-icon {
+  font-size: 18px;
+  display: inline-block;
+}
+
+.refresh-icon.spinning {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .receipt-inline-error {
   margin-bottom: var(--spacing-md);
   padding: var(--spacing-sm) var(--spacing-md);
@@ -145,13 +188,34 @@
   text-overflow: ellipsis;
 }
 
+.claim-item-prices {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
 .claim-item-price {
   font-family: var(--font-body);
   font-size: 15px;
   font-weight: 600;
   color: var(--color-on-surface);
-  flex-shrink: 0;
-  margin-left: 12px;
+}
+
+.claim-item-my-price {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-secondary);
+}
+
+.claim-item-full-price {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-outline);
+  text-decoration: line-through;
+  margin-top: 1px;
 }
 
 /* ── Sticky footer ── */
