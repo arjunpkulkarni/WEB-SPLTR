@@ -10,7 +10,7 @@ export default function SuccessPage() {
   return (
     <div className="success-page">
       <div className="success-container">
-        <header className="brand-header"><span className="brand">SPLTR</span></header>
+        <header className="brand-header"><span className="brand">settld</span></header>
 
         <div className="centered-state">
           <div className="state-icon success-bg">

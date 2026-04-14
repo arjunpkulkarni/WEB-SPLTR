@@ -22,7 +22,7 @@ export default function PaymentForm({ amount, billTitle, clientSecret, onSuccess
     const pr = stripe.paymentRequest({
       country: 'US',
       currency: 'usd',
-      total: { label: billTitle || 'SPLTR Payment', amount: amountCents },
+      total: { label: billTitle || 'settld Payment', amount: amountCents },
       requestPayerName: true,
       requestPayerEmail: true,
     });

@@ -27,7 +27,7 @@ export default function ErrorPage() {
   return (
     <div className="error-page">
       <div className="error-container">
-        <header className="brand-header"><span className="brand">SPLTR</span></header>
+        <header className="brand-header"><span className="brand">settld</span></header>
 
         <div className="centered-state">
           <div className={`state-icon ${isExpired ? 'expired-bg' : isPaid ? 'success-bg' : 'error-bg'}`}>

@@ -59,7 +59,7 @@ export default function PaymentPage() {
     return (
       <div className="pay-page">
         <div className="pay-container">
-          <header className="brand-header"><span className="brand">SPLTR</span></header>
+          <header className="brand-header"><span className="brand">settld</span></header>
           <div className="centered-state">
             <div className="state-icon error-bg"><span className="state-emoji">!</span></div>
             <h1 className="state-title error-color">Unable to Load Payment</h1>
@@ -80,7 +80,7 @@ export default function PaymentPage() {
   return (
     <div className="pay-page">
       <div className="pay-container">
-        <header className="brand-header"><span className="brand">SPLTR</span></header>
+        <header className="brand-header"><span className="brand">settld</span></header>
 
         <div className="hero-section">
           <div className="hero-icon"><span style={{ fontSize: 28 }}>💳</span></div>
