@@ -32,19 +32,23 @@ export default function PartyReceiptPage() {
 
   useEffect(() => { fetchReceipt(); }, [fetchReceipt]);
 
-  // WebSocket for real-time updates
+  // WebSocket for real-time updates (optional — fails silently)
   useEffect(() => {
     let ws;
     try {
       ws = new WebSocket(buildPartyWsUrl(token));
+      ws.onopen = () => { wsRef.current = ws; };
       ws.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-        if (msg.type === 'assignment_update' || msg.type === 'member_joined') {
-          fetchReceipt();
-        }
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'assignment_update' || msg.type === 'member_joined') {
+            fetchReceipt();
+          }
+        } catch { /* ignore malformed messages */ }
       };
-      wsRef.current = ws;
-    } catch { /* WebSocket optional */ }
+      ws.onerror = () => { /* WebSocket not available — silent fallback */ };
+      ws.onclose = () => { wsRef.current = null; };
+    } catch { /* WebSocket not supported */ }
     return () => { ws?.close(); };
   }, [token, fetchReceipt]);
 
@@ -143,7 +147,7 @@ export default function PartyReceiptPage() {
                   </div>
                 </div>
                 <span className="claim-item-price">
-                  {formatCurrency(item.price ?? item.amount)}
+                  {formatCurrency(item.price ?? item.amount ?? item.unit_price ?? item.total ?? 0)}
                 </span>
               </button>
             );

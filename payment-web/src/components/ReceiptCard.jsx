@@ -13,7 +13,7 @@ export default function ReceiptCard({ paymentInfo }) {
       {items.length > 0 && items.map((item, i) => (
         <div key={`${item.name}-${i}`} className="line-item">
           <span className="line-item-name">{item.name || 'Item'}</span>
-          <span className="line-item-price">{formatCurrency(item.amount ?? item.price)}</span>
+          <span className="line-item-price">{formatCurrency(item.amount ?? item.price ?? item.unit_price ?? item.total ?? 0)}</span>
         </div>
       ))}
 
