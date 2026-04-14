@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { joinParty } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import './PartyJoinPage.css';
@@ -7,6 +7,8 @@ import './PartyJoinPage.css';
 export default function PartyJoinPage() {
   const { token } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const basePath = location.pathname.startsWith('/join') ? '/join' : '/party';
   const [nickname, setNickname] = useState('');
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState(null);
@@ -20,7 +22,7 @@ export default function PartyJoinPage() {
     setError(null);
     try {
       const data = await joinParty(token, name);
-      navigate(`/party/${token}/receipt`, {
+      navigate(`${basePath}/${token}/receipt`, {
         state: {
           memberId: data.member_id,
           memberName: name,

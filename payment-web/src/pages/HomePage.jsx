@@ -15,15 +15,15 @@ export default function HomePage() {
     setError(null);
 
     // If they pasted a full URL, extract the token from it
-    const urlMatch = trimmed.match(/\/party\/([^/?\s]+)/);
+    const urlMatch = trimmed.match(/\/(?:party|join)\/([^/?\s]+)/);
     if (urlMatch) {
-      navigate(`/party/${urlMatch[1]}`);
+      navigate(`/join/${urlMatch[1]}`);
       return;
     }
 
     // If it looks like a token/code, navigate directly
     if (/^[a-zA-Z0-9_-]{4,}$/.test(trimmed)) {
-      navigate(`/party/${trimmed}`);
+      navigate(`/join/${trimmed}`);
       return;
     }
 

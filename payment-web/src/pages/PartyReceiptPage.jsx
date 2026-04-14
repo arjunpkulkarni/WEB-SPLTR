@@ -11,6 +11,7 @@ export default function PartyReceiptPage() {
   const location = useLocation();
   const memberName = location.state?.memberName || 'You';
   const billTitle = location.state?.billTitle;
+  const basePath = location.pathname.startsWith('/join') ? '/join' : '/party';
 
   const [receipt, setReceipt] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -60,7 +61,7 @@ export default function PartyReceiptPage() {
   };
 
   const handleContinue = () => {
-    navigate(`/party/${token}/pay`, {
+    navigate(`${basePath}/${token}/pay`, {
       state: { memberName, billTitle },
     });
   };

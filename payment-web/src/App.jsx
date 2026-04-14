@@ -16,6 +16,9 @@ function App() {
         <Route path="/" element={<HomePage />} />
 
         {/* Flow 2: Party / Guest invite */}
+        <Route path="/join/:token" element={<PartyJoinPage />} />
+        <Route path="/join/:token/receipt" element={<PartyReceiptPage />} />
+        <Route path="/join/:token/pay" element={<PartyPayPage />} />
         <Route path="/party/:token" element={<PartyJoinPage />} />
         <Route path="/party/:token/receipt" element={<PartyReceiptPage />} />
         <Route path="/party/:token/pay" element={<PartyPayPage />} />
