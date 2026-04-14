@@ -15,10 +15,10 @@ export default function PartyReceiptPage() {
 
   const [receipt, setReceipt] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [claiming, setClaiming] = useState(null);
   const [error, setError] = useState(null);
   const wsRef = useRef(null);
+  const pollRef = useRef(null);
 
   const fetchReceipt = useCallback(async () => {
     try {
@@ -29,35 +29,53 @@ export default function PartyReceiptPage() {
       setError(err.message);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   }, [token]);
 
-  const handleRefresh = () => {
-    setRefreshing(true);
-    fetchReceipt();
-  };
-
   useEffect(() => { fetchReceipt(); }, [fetchReceipt]);
 
-  // WebSocket for real-time updates (optional — fails silently)
+  // WebSocket for real-time updates; falls back to polling every 5s
   useEffect(() => {
     let ws;
+    let wsConnected = false;
+
     try {
       ws = new WebSocket(buildPartyWsUrl(token));
-      ws.onopen = () => { wsRef.current = ws; };
+      ws.onopen = () => {
+        wsRef.current = ws;
+        wsConnected = true;
+        clearInterval(pollRef.current);
+      };
       ws.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data);
-          if (msg.type === 'assignment_update' || msg.type === 'member_joined') {
+          if (msg.type === 'assignment_update' || msg.type === 'member_joined' || msg.type === 'payment_complete') {
             fetchReceipt();
           }
-        } catch { /* ignore malformed messages */ }
+        } catch {}
       };
       ws.onerror = () => {};
-      ws.onclose = () => { wsRef.current = null; };
-    } catch { /* WebSocket not supported */ }
-    return () => { ws?.close(); };
+      ws.onclose = () => {
+        wsRef.current = null;
+        wsConnected = false;
+        // WebSocket died — start polling as fallback
+        if (!pollRef.current) {
+          pollRef.current = setInterval(fetchReceipt, 5000);
+        }
+      };
+    } catch {
+      // WebSocket not available — use polling
+    }
+
+    // Start polling immediately as fallback until WebSocket connects
+    pollRef.current = setInterval(() => {
+      if (!wsConnected) fetchReceipt();
+    }, 5000);
+
+    return () => {
+      ws?.close();
+      clearInterval(pollRef.current);
+    };
   }, [token, fetchReceipt]);
 
   const handleClaim = async (itemId, action) => {
@@ -115,15 +133,6 @@ export default function PartyReceiptPage() {
             Hi <strong>{memberName}</strong> — tap items you had
           </p>
         </div>
-
-        <button
-          className="refresh-btn"
-          onClick={handleRefresh}
-          disabled={refreshing}
-        >
-          <span className={`refresh-icon ${refreshing ? 'spinning' : ''}`}>↻</span>
-          {refreshing ? 'Refreshing...' : 'Refresh'}
-        </button>
 
         {error && (
           <div className="receipt-inline-error" role="alert">{error}</div>
