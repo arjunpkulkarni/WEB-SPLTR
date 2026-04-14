@@ -147,7 +147,7 @@ export default function PartyReceiptPage() {
                   </div>
                 </div>
                 <span className="claim-item-price">
-                  {formatCurrency(item.price ?? item.amount ?? item.unit_price ?? item.total ?? 0)}
+                  {formatCurrency(parseFloat(item.total_price || item.unit_price || 0))}
                 </span>
               </button>
             );

@@ -3,17 +3,17 @@ import './ReceiptCard.css';
 
 export default function ReceiptCard({ paymentInfo }) {
   const items = paymentInfo.items || [];
-  const subtotal = parseFloat(paymentInfo.subtotal ?? paymentInfo.amount ?? 0);
-  const tax = parseFloat(paymentInfo.tax ?? paymentInfo.tax_share ?? 0);
-  const serviceFee = parseFloat(paymentInfo.service_fee ?? paymentInfo.tip_share ?? 0);
-  const total = parseFloat(paymentInfo.total ?? subtotal);
+  const subtotal = parseFloat(paymentInfo.subtotal ?? paymentInfo.amount ?? 0) || 0;
+  const tax = parseFloat(paymentInfo.tax ?? paymentInfo.tax_share ?? 0) || 0;
+  const serviceFee = parseFloat(paymentInfo.service_fee ?? paymentInfo.tip_share ?? paymentInfo.fee_share ?? 0) || 0;
+  const total = parseFloat(paymentInfo.total ?? paymentInfo.total_owed ?? subtotal) || 0;
 
   return (
     <div className="receipt-card">
       {items.length > 0 && items.map((item, i) => (
         <div key={`${item.name}-${i}`} className="line-item">
           <span className="line-item-name">{item.name || 'Item'}</span>
-          <span className="line-item-price">{formatCurrency(item.amount ?? item.price ?? item.unit_price ?? item.total ?? 0)}</span>
+          <span className="line-item-price">{formatCurrency(parseFloat(item.total_price || item.unit_price || item.amount || item.price || 0))}</span>
         </div>
       ))}
 
