@@ -1,14 +1,10 @@
 import './LoadingSpinner.css';
 
-const LoadingSpinner = ({ message = 'Loading...' }) => {
+export default function LoadingSpinner({ message = 'Loading...' }) {
   return (
-    <div className="loading-spinner-container">
-      <div className="loading-spinner" role="status" aria-live="polite">
-        <div className="spinner"></div>
-        <p>{message}</p>
-      </div>
+    <div className="loading-container">
+      <div className="spinner" />
+      <p className="loading-text">{message}</p>
     </div>
   );
-};
-
-export default LoadingSpinner;
+}

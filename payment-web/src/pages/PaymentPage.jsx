@@ -1,15 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { getPaymentDetails, confirmPayment } from '../services/api';
+import { getPaymentDetails } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
-import ItemsList from '../components/ItemsList';
-import PaymentSummary from '../components/PaymentSummary';
+import ReceiptCard from '../components/ReceiptCard';
 import PaymentForm from '../components/PaymentForm';
 import './PaymentPage.css';
 
-const PaymentPage = () => {
+export default function PaymentPage() {
   const { token } = useParams();
   const navigate = useNavigate();
   const [paymentData, setPaymentData] = useState(null);
@@ -17,155 +16,112 @@ const PaymentPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchPaymentDetails = async () => {
-      try {
-        setLoading(true);
-        const data = await getPaymentDetails(token);
+  const fetchPayment = useCallback(async () => {
+    if (!token) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getPaymentDetails(token);
 
-        if (data.token_expired) {
-          navigate('/error', { state: { message: 'This payment link has expired.' } });
-          return;
-        }
-
-        if (data.already_paid) {
-          navigate('/error', { state: { message: 'This bill has already been paid.' } });
-          return;
-        }
-
-        setPaymentData(data);
-        
-        const publishableKey = data.stripe_publishable_key || import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-        setStripePromise(loadStripe(publishableKey));
-        
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching payment details:', err);
-        setError(err.message || 'Failed to load payment details. Please try again.');
-        setLoading(false);
+      if (data.token_expired) {
+        navigate('/error', { state: { type: 'expired' } });
+        return;
       }
-    };
+      if (data.already_paid) {
+        navigate('/error', { state: { type: 'paid' } });
+        return;
+      }
 
-    if (token) {
-      fetchPaymentDetails();
+      setPaymentData(data);
+      const pk = data.stripe_publishable_key || import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+      if (pk) setStripePromise(loadStripe(pk));
+    } catch (err) {
+      setError(err.message || 'Could not load payment details.');
+    } finally {
+      setLoading(false);
     }
   }, [token, navigate]);
 
-  const handlePaymentSuccess = async (paymentIntent) => {
-    try {
-      const result = await confirmPayment(token, paymentIntent.id);
-      navigate('/success', { 
-        state: { 
-          receiptUrl: result.receipt_url,
-          amount: paymentData.total,
-          billTitle: paymentData.bill_title,
-        } 
-      });
-    } catch (err) {
-      console.error('Error confirming payment:', err);
-      setError('Payment succeeded but confirmation failed. Please contact support.');
-    }
+  useEffect(() => { fetchPayment(); }, [fetchPayment]);
+
+  const handleSuccess = () => {
+    navigate('/success', {
+      state: {
+        amount: paymentData?.total ?? paymentData?.amount,
+        billTitle: paymentData?.bill_title,
+      },
+    });
   };
 
-  const handlePaymentError = (error) => {
-    console.error('Payment error:', error);
-  };
-
-  const handleRetry = () => {
-    setError(null);
-    setLoading(true);
-    window.location.reload();
-  };
-
-  if (loading) {
-    return <LoadingSpinner message="Loading payment details..." />;
-  }
+  if (loading) return <LoadingSpinner message="Loading payment details..." />;
 
   if (error) {
     return (
-      <div className="payment-page error-state">
-        <div className="error-container">
-          <svg
-            className="error-icon"
-            width="64"
-            height="64"
-            viewBox="0 0 64 64"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle cx="32" cy="32" r="30" stroke="#ef4444" strokeWidth="4" />
-            <path
-              d="M32 20V36M32 44V44.01"
-              stroke="#ef4444"
-              strokeWidth="4"
-              strokeLinecap="round"
-            />
-          </svg>
-          <h1>Unable to Load Payment</h1>
-          <p>{error}</p>
-          <button onClick={handleRetry} className="retry-button">
-            Try Again
-          </button>
+      <div className="pay-page">
+        <div className="pay-container">
+          <header className="brand-header"><span className="brand">SPLTR</span></header>
+          <div className="centered-state">
+            <div className="state-icon error-bg"><span className="state-emoji">!</span></div>
+            <h1 className="state-title error-color">Unable to Load Payment</h1>
+            <p className="state-desc">{error}</p>
+            <button className="action-btn" onClick={fetchPayment}>Try Again</button>
+          </div>
         </div>
       </div>
     );
   }
 
-  if (!paymentData || !stripePromise) {
-    return <LoadingSpinner message="Initializing payment..." />;
-  }
+  if (!paymentData) return <LoadingSpinner message="Initializing..." />;
 
-  const options = {
-    clientSecret: paymentData.payment_intent_client_secret,
-    appearance: {
-      theme: 'stripe',
-      variables: {
-        colorPrimary: '#2563eb',
-        colorBackground: '#ffffff',
-        colorText: '#1e293b',
-        colorDanger: '#ef4444',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        spacingUnit: '4px',
-        borderRadius: '8px',
-      },
-    },
-  };
+  const billTitle = paymentData.bill_title || 'Your Bill';
+  const totalAmount = paymentData.total ?? paymentData.amount;
+  const clientSecret = paymentData.stripe_client_secret || paymentData.payment_intent_client_secret;
 
   return (
-    <div className="payment-page">
-      <div className="payment-container">
-        <header className="payment-header">
-          <h1 className="bill-title">{paymentData.bill_title}</h1>
-          {paymentData.merchant_name && (
-            <p className="merchant-name">{paymentData.merchant_name}</p>
-          )}
-          {paymentData.member_name && (
-            <p className="member-name">Payment for {paymentData.member_name}</p>
-          )}
-        </header>
+    <div className="pay-page">
+      <div className="pay-container">
+        <header className="brand-header"><span className="brand">SPLTR</span></header>
 
-        <ItemsList
-          items={paymentData.items}
-          subtotal={paymentData.subtotal}
-        />
+        <div className="hero-section">
+          <div className="hero-icon"><span style={{ fontSize: 28 }}>💳</span></div>
+          <h1 className="hero-title">{billTitle}</h1>
+          <p className="hero-subtitle">Pay your share securely below</p>
+        </div>
 
-        <PaymentSummary
-          subtotal={paymentData.subtotal}
-          taxShare={paymentData.tax_share}
-          tipShare={paymentData.tip_share}
-          total={paymentData.total}
-        />
+        <ReceiptCard paymentInfo={paymentData} />
 
-        <Elements stripe={stripePromise} options={options}>
-          <PaymentForm
-            amount={paymentData.total}
-            onSuccess={handlePaymentSuccess}
-            onError={handlePaymentError}
-          />
-        </Elements>
+        {clientSecret && stripePromise ? (
+          <Elements
+            stripe={stripePromise}
+            options={{
+              clientSecret,
+              appearance: {
+                theme: 'stripe',
+                variables: {
+                  colorPrimary: '#006c5c',
+                  fontFamily: 'Inter, system-ui, sans-serif',
+                  borderRadius: '8px',
+                },
+              },
+            }}
+          >
+            <PaymentForm
+              amount={totalAmount}
+              billTitle={billTitle}
+              clientSecret={clientSecret}
+              onSuccess={handleSuccess}
+            />
+          </Elements>
+        ) : (
+          <div className="no-stripe-card">
+            <p className="no-stripe-text">
+              {!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+                ? 'Stripe is not configured. Contact the bill owner.'
+                : 'Unable to load payment form.'}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
-};
-
-export default PaymentPage;
+}
