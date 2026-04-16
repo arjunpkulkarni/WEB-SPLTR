@@ -31,9 +31,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   width: 100%;
   margin-top: 20px;
-  height: 52px;
+  height: 56px;
   border: none;
   border-radius: var(--radius-full);
   background: linear-gradient(135deg, var(--color-secondary), var(--color-secondary-dim));
@@ -43,11 +44,17 @@
   font-weight: 700;
   cursor: pointer;
   transition: opacity 0.15s;
-  box-shadow: 0 12px 24px rgba(0, 108, 92, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 108, 92, 0.2);
 }
 
 .pay-btn:hover:not(:disabled) { opacity: 0.92; }
 .pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.pay-btn-icon {
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+}
 
 .payment-error {
   margin-top: var(--spacing-md);
@@ -59,9 +66,10 @@
   border-radius: var(--radius-sm);
 }
 
-.secured-text {
+.pay-hint {
   font-size: 12px;
   color: var(--color-outline-variant);
   text-align: center;
   margin-top: 12px;
+  line-height: 18px;
 }

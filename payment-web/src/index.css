@@ -100,10 +100,10 @@ a {
 
 .brand {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.8px;
-  color: var(--color-secondary);
+  color: var(--color-on-surface);
 }
 
 /* -- Shared: centered state cards -- */

@@ -49,6 +49,7 @@ export default function PaymentPage() {
       state: {
         amount: paymentData?.total ?? paymentData?.amount,
         billTitle: paymentData?.bill_title,
+        merchantName: paymentData?.merchant_name,
       },
     });
   };
@@ -73,9 +74,10 @@ export default function PaymentPage() {
 
   if (!paymentData) return <LoadingSpinner message="Initializing..." />;
 
-  const billTitle = paymentData.bill_title || 'Your Bill';
+  const billTitle = paymentData.bill_title || paymentData.merchant_name || 'Your Bill';
   const totalAmount = paymentData.total ?? paymentData.amount;
   const clientSecret = paymentData.stripe_client_secret || paymentData.payment_intent_client_secret;
+  const memberName = paymentData.member_nickname || paymentData.member_name;
 
   return (
     <div className="pay-page">
@@ -83,9 +85,11 @@ export default function PaymentPage() {
         <header className="brand-header"><span className="brand">settld</span></header>
 
         <div className="hero-section">
-          <div className="hero-icon"><span style={{ fontSize: 28 }}>💳</span></div>
+          <div className="hero-icon"><span style={{ fontSize: 36 }}>🧾</span></div>
           <h1 className="hero-title">{billTitle}</h1>
-          <p className="hero-subtitle">Pay your share securely below</p>
+          <p className="hero-subtitle">
+            Your share{memberName ? ` (${memberName})` : ''} — review and pay below.
+          </p>
         </div>
 
         <ReceiptCard paymentInfo={paymentData} />
@@ -100,7 +104,13 @@ export default function PaymentPage() {
                 variables: {
                   colorPrimary: '#006c5c',
                   fontFamily: 'Inter, system-ui, sans-serif',
-                  borderRadius: '8px',
+                  borderRadius: '12px',
+                },
+                rules: {
+                  '.Input': {
+                    padding: '14px 16px',
+                    fontSize: '16px',
+                  },
                 },
               },
             }}
@@ -121,6 +131,19 @@ export default function PaymentPage() {
             </p>
           </div>
         )}
+
+        <div className="security-footer">
+          <div className="footer-card">
+            <div className="footer-card-icon">🔒</div>
+            <div className="footer-card-label">Security</div>
+            <div className="footer-card-value">Payments processed securely via Stripe</div>
+          </div>
+          <div className="footer-card">
+            <div className="footer-card-icon">💳</div>
+            <div className="footer-card-label">Payment</div>
+            <div className="footer-card-value">Card, Apple Pay, and Google Pay accepted</div>
+          </div>
+        </div>
       </div>
     </div>
   );

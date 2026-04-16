@@ -108,10 +108,13 @@ export default function PaymentForm({ amount, billTitle, clientSecret, onSuccess
         disabled={processing || !stripe}
         className="pay-btn"
       >
+        <span className="pay-btn-icon">🔒</span>
         {processing ? 'Processing...' : `Pay ${formatCurrency(amount)}`}
       </button>
 
-      <p className="secured-text">Payments processed securely via Stripe</p>
+      <p className="pay-hint">
+        Uses your saved payment flow. Payments are processed securely via Stripe.
+      </p>
     </form>
   );
 }
