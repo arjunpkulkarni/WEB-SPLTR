@@ -21,11 +21,14 @@ export default function PartyReceiptPage() {
   const pollRef = useRef(null);
 
   const fetchReceipt = useCallback(async () => {
+    console.log('[API] GET /party/' + token + '/receipt');
     try {
       const data = await getReceipt(token);
+      console.log('[API] ✅ Receipt response:', data);
       setReceipt(data);
       setError(null);
     } catch (err) {
+      console.error('[API] ❌ Receipt error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -38,52 +41,80 @@ export default function PartyReceiptPage() {
   useEffect(() => {
     let ws;
     let wsConnected = false;
+    const wsUrl = buildPartyWsUrl(token);
+
+    console.log('[WS] Attempting to connect:', wsUrl);
 
     try {
-      ws = new WebSocket(buildPartyWsUrl(token));
-      ws.onopen = () => {
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = (event) => {
+        console.log('[WS] ✅ Connected:', event);
         wsRef.current = ws;
         wsConnected = true;
         clearInterval(pollRef.current);
+        pollRef.current = null;
       };
+
       ws.onmessage = (event) => {
+        console.log('[WS] 📩 Raw message received:', event.data);
         try {
           const msg = JSON.parse(event.data);
+          console.log('[WS] 📨 Parsed message:', msg);
+          console.log('[WS] 🏷️  Message type:', msg.type);
+
           if (msg.type === 'assignment_update' || msg.type === 'member_joined' || msg.type === 'payment_complete') {
+            console.log('[WS] ✨ Recognized event — refreshing receipt');
             fetchReceipt();
+          } else {
+            console.log('[WS] ⚠️ Unknown event type, not refreshing:', msg.type);
           }
-        } catch {}
+        } catch (err) {
+          console.error('[WS] ❌ Failed to parse message:', err, event.data);
+        }
       };
-      ws.onerror = () => {};
-      ws.onclose = () => {
+
+      ws.onerror = (event) => {
+        console.error('[WS] ❌ Error:', event);
+      };
+
+      ws.onclose = (event) => {
+        console.log('[WS] 🔌 Closed:', { code: event.code, reason: event.reason, wasClean: event.wasClean });
         wsRef.current = null;
         wsConnected = false;
-        // WebSocket died — start polling as fallback
         if (!pollRef.current) {
+          console.log('[WS] ⏱️ Starting 5s polling fallback');
           pollRef.current = setInterval(fetchReceipt, 5000);
         }
       };
-    } catch {
-      // WebSocket not available — use polling
+    } catch (err) {
+      console.error('[WS] ❌ Failed to create WebSocket:', err);
     }
 
     // Start polling immediately as fallback until WebSocket connects
     pollRef.current = setInterval(() => {
-      if (!wsConnected) fetchReceipt();
+      if (!wsConnected) {
+        console.log('[Poll] Fetching receipt (WS not connected)');
+        fetchReceipt();
+      }
     }, 5000);
 
     return () => {
+      console.log('[WS] Cleanup — closing WebSocket and clearing poll');
       ws?.close();
       clearInterval(pollRef.current);
     };
   }, [token, fetchReceipt]);
 
   const handleClaim = async (itemId, action) => {
+    console.log('[API] POST /party/' + token + '/claim', { receipt_item_id: itemId, action });
     setClaiming(itemId);
     try {
       const data = await claimItems(token, [{ receipt_item_id: itemId, action }]);
+      console.log('[API] ✅ Claim response:', data);
       setReceipt(data);
     } catch (err) {
+      console.error('[API] ❌ Claim error:', err);
       setError(err.message);
     } finally {
       setClaiming(null);
